@@ -32,16 +32,26 @@
                         <th>Total Sum</th>
                     </tr>
                 </thead>
+                @php
+                    $data = [
+                        'labels' => [],
+                        'data' => [],
+                    ];
+                @endphp
                 @if ($sales != null)
                     <tbody class="text-center ">
 
                         @php
                             $grandSum = 0;
+
+                            $data['labels'] = array_column($sales->toArray(), 'Date');
+                            $data['data'] = array_column($sales->toArray(), 'TotalSum');
                         @endphp
                         @foreach ($sales as $sale)
                             <tr>
                                 <td>{{ $sale->Date }}</td>
-                                <td>{{ round($sale->TotalSum, 2) }}</td>
+
+                                <td>{{ formatIndianCurrency(round($sale->TotalSum, 0)) }}</td>
                                 @php
                                     $grandSum += $sale->TotalSum;
                                 @endphp
@@ -49,15 +59,18 @@
                         @endforeach
 
                     </tbody>
-                    <tfoot>
+                    <tfoot class="text-center ">
                         <tr>
                             <td><strong>Grand Total</strong></td>
-                            <td><strong>{{ round($grandSum, 2) }}</strong></td>
+                            <td><strong>{{ formatIndianCurrency(round($grandSum, 0)) }}</strong></td>
                         </tr>
                     </tfoot>
                 @endif
             </table>
         </div>
+        <!-- Display the line chart -->
+
+        <x-graphs.lineChart :data="$data" />
     </div>
     <script src="{{ asset('js/jquery.js') }}"></script>
     <script>
