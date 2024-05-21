@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SalesController extends Controller
+class AnalyticsController extends Controller
 {
 
     public function index()
@@ -20,28 +20,11 @@ class SalesController extends Controller
     {
 
         $repairs = null;
-        // if get Request 
         if ($request->isMethod('get')) {
             return view('analytics.repairs', compact('repairs'));
         } else {
             $startDate = $request->startDate;
             $endDate = $request->endDate;
-
-
-            //               SELECT 
-            //       DATE(Document.DateCreated) AS Date, 
-            //       SUM(DocumentItem.Total) AS totalSum
-            //   FROM 
-            //       Document
-            //   INNER JOIN 
-            //       DocumentItem ON DocumentItem.DocumentId = Document.id
-            //   INNER JOIN 
-            //       Product ON Product.id = DocumentItem.ProductId
-            //   WHERE 
-            //       Product.ProductGroupId = 17
-            //       AND Document.DateCreated BETWEEN '${startDate}' AND '${endDate}'
-            //   GROUP BY 
-            //       DATE(Document.DateCreated)
 
             $startDate = Carbon::parse($startDate);
             $endDate = Carbon::parse($endDate)->endOfDay();
@@ -54,36 +37,18 @@ class SalesController extends Controller
                 ->groupBy(DB::raw('DATE(Document.DateCreated)'))
                 ->get();
         }
-        return view('analytics.repairs', compact('repairs'));
+        return view('analytics.repairs', compact('repairs', 'startDate', 'endDate'));
     }
 
     public function sales(Request $request)
     {
 
         $sales = null;
-        // if get Request 
         if ($request->isMethod('get')) {
             return view('analytics.sales', compact('sales'));
         } else {
             $startDate = $request->startDate;
             $endDate = $request->endDate;
-
-
-            //               SELECT 
-            //       DATE(Document.DateCreated) AS Date, 
-            //       SUM(DocumentItem.Total) AS totalSum
-            //   FROM 
-            //       Document
-            //   INNER JOIN 
-            //       DocumentItem ON DocumentItem.DocumentId = Document.id
-            //   INNER JOIN 
-            //       Product ON Product.id = DocumentItem.ProductId
-            //   WHERE 
-            //       Product.ProductGroupId = 17
-            //       AND Document.DateCreated BETWEEN '${startDate}' AND '${endDate}'
-            //   GROUP BY 
-            //       DATE(Document.DateCreated)
-
             $startDate = Carbon::parse($startDate);
             $endDate = Carbon::parse($endDate)->endOfDay();
 
@@ -92,6 +57,6 @@ class SalesController extends Controller
                 ->groupBy(DB::raw('DATE(DateCreated)'))
                 ->get();
         }
-        return view('analytics.sales', compact('sales'));
+        return view('analytics.sales', compact('sales', 'startDate', 'endDate'));
     }
 }

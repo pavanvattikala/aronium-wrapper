@@ -2,31 +2,17 @@
 @section('content')
     <div class="container mx-auto">
         <h1 class="text-2xl font-bold mb-4">Get Sales</h1>
-        <div>
-            <form action="{{ route('sales') }}" method="POST">
-                @csrf
-                <div class="flex mb-4">
-                    <div class="mr-4">
-                        <label class="block text-gray-700 font-bold mb-2" for="startDate">Start Date:</label>
-                        <input type="date" id="startDate" name="startDate"
-                            class="shadow appearance-none border rounded w-48 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            value="{{ old('startDate') }}">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2" for="endDate">End Date:</label>
-                        <input type="date" id="endDate" name="endDate"
-                            class="shadow appearance-none border rounded w-48 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            value="{{ old('endDate') }}">
-                    </div>
-                </div>
-                <button type="submit"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Fetch
-                    sales</button>
-            </form>
-        </div>
+        <!-- Date input component -->
+        <x-utils.dateInput action="{{ route('sales') }}" />
         <div class="mt-6">
             <table id="salesTable" class="table-auto w-full">
                 <thead>
+                    @if ($sales != null)
+                        <tr>
+                            <th colspan="2" id="table-heading">Sales From {{ date('d-m-Y', strtotime($startDate)) }} To
+                                {{ date('d-m-Y', strtotime($endDate)) }}</th>
+                        </tr>
+                    @endif
                     <tr>
                         <th>Date</th>
                         <th>Total Sum</th>
@@ -49,7 +35,7 @@
                         @endphp
                         @foreach ($sales as $sale)
                             <tr>
-                                <td>{{ $sale->Date }}</td>
+                                <td>{{ date('d-m-Y', strtotime($sale->Date)) }}</td>
 
                                 <td>{{ formatIndianCurrency(round($sale->TotalSum, 0)) }}</td>
                                 @php
