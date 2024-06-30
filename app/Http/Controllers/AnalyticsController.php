@@ -16,47 +16,70 @@ class AnalyticsController extends Controller
         return view('analytics.index');
     }
 
-    public function repairs(Request $request)
+    public function repairs_by_date($startDate, $endDate)
     {
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate)->endOfDay();
 
-        $repairs = null;
-        if ($request->isMethod('get')) {
-            return view('analytics.repairs', compact('repairs'));
-        } else {
-            $startDate = $request->startDate;
-            $endDate = $request->endDate;
+        $repairs = Document::join('DocumentItem', 'Document.id', '=', 'DocumentItem.DocumentId')
+            ->join('Product', 'Product.id', '=', 'DocumentItem.ProductId')
+            ->where('Product.ProductGroupId', 17)
+            ->whereBetween('Document.DateCreated', [$startDate, $endDate])
+            ->selectRaw('DATE(Document.DateCreated) AS Date, SUM(DocumentItem.Total) AS TotalSum')
+            ->groupBy(DB::raw('DATE(Document.DateCreated)'))
+            ->get();
 
-            $startDate = Carbon::parse($startDate);
-            $endDate = Carbon::parse($endDate)->endOfDay();
-
-            $repairs = Document::join('DocumentItem', 'Document.id', '=', 'DocumentItem.DocumentId')
-                ->join('Product', 'Product.id', '=', 'DocumentItem.ProductId')
-                ->where('Product.ProductGroupId', 17)
-                ->whereBetween('Document.DateCreated', [$startDate, $endDate])
-                ->selectRaw('DATE(Document.DateCreated) AS Date, SUM(DocumentItem.Total) AS TotalSum')
-                ->groupBy(DB::raw('DATE(Document.DateCreated)'))
-                ->get();
-        }
-        return view('analytics.repairs', compact('repairs', 'startDate', 'endDate'));
+        return $repairs;
     }
 
-    public function sales(Request $request)
+    public function sales_by_date($startDate, $endDate)
+    {
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate)->endOfDay();
+
+        $sales = Document::whereBetween('DateCreated', [$startDate, $endDate])
+            ->selectRaw('DATE(DateCreated) AS Date, SUM(total) AS TotalSum')
+            ->groupBy(DB::raw('DATE(DateCreated)'))
+            ->get();
+
+        return $sales;
+    }
+
+    public function by_date(Request $request)
     {
 
-        $sales = null;
+        // initialize analytics data
+        $analytics_data = null;
+
+        // get type fom url parameter
+        $type = $request->type;
+
+        $allowd_types = ['repairs', 'sales'];
+
+        // check if type is allowed
+        if (!in_array($type, $allowd_types)) {
+            // 404 page
+            abort(404);
+        }
+
+        //  if get request return view
         if ($request->isMethod('get')) {
-            return view('analytics.sales', compact('sales'));
+            return view('analytics.by_date', compact('analytics_data', 'type'));
         } else {
+            // POST request
             $startDate = $request->startDate;
             $endDate = $request->endDate;
+
             $startDate = Carbon::parse($startDate);
             $endDate = Carbon::parse($endDate)->endOfDay();
 
-            $sales = Document::whereBetween('DateCreated', [$startDate, $endDate])
-                ->selectRaw('DATE(DateCreated) AS Date, SUM(total) AS TotalSum')
-                ->groupBy(DB::raw('DATE(DateCreated)'))
-                ->get();
+            // check if route has repair or sales
+            if ($type == 'repairs') {
+                $analytics_data = $this->repairs_by_date($startDate, $endDate);
+            } else {
+                $analytics_data = $this->sales_by_date($startDate, $endDate);
+            }
         }
-        return view('analytics.sales', compact('sales', 'startDate', 'endDate'));
+        return view('analytics.by_date', compact('analytics_data', 'startDate', 'endDate', 'type'));
     }
 }

@@ -1,15 +1,31 @@
-@extends('layouts.app')
+@extends('layouts.app', ['title' => 'Get ' . Str::ucfirst($type) . ' By Date'])
 @section('content')
+    <style>
+        tr {
+            border-bottom: 1px solid #343030;
+        }
+
+        /* odd tr background color */
+        tr:nth-child(odd) {
+            background-color: #cbcbcbcd;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 60%;
+        }
+    </style>
     <div class="container mx-auto">
-        <h1 class="text-2xl font-bold mb-4">Get Sales</h1>
+        <h1 class="text-2xl font-bold mb-4">Get {{ Str::ucfirst($type) }}</h1>
         <!-- Date input component -->
-        <x-utils.dateInput action="{{ route('sales') }}" />
+        <x-utils.dateInput action="{{ route('analytics.by_date') }}" type="{{ $type }}" />
         <div class="mt-6">
-            <table id="salesTable" class="table-auto w-full">
+            <table id="analyticsTable" class="table-auto w-2/3">
                 <thead>
-                    @if ($sales != null)
+                    @if ($analytics_data != null)
                         <tr>
-                            <th colspan="2" id="table-heading">Sales From {{ date('d-m-Y', strtotime($startDate)) }} To
+                            <th colspan="2" id="table-heading"> {{ Str::ucfirst($type) }} Data From
+                                {{ date('d-m-Y', strtotime($startDate)) }} To
                                 {{ date('d-m-Y', strtotime($endDate)) }}</th>
                         </tr>
                     @endif
@@ -19,27 +35,27 @@
                     </tr>
                 </thead>
                 @php
-                    $data = [
+                    $graph_data = [
                         'labels' => [],
                         'data' => [],
                     ];
                 @endphp
-                @if ($sales != null)
+                @if ($analytics_data != null)
                     <tbody class="text-center ">
 
                         @php
                             $grandSum = 0;
 
-                            $data['labels'] = array_column($sales->toArray(), 'Date');
-                            $data['data'] = array_column($sales->toArray(), 'TotalSum');
+                            $graph_data['labels'] = array_column($analytics_data->toArray(), 'Date');
+                            $graph_data['data'] = array_column($analytics_data->toArray(), 'TotalSum');
                         @endphp
-                        @foreach ($sales as $sale)
+                        @foreach ($analytics_data as $data)
                             <tr>
-                                <td>{{ date('d-m-Y', strtotime($sale->Date)) }}</td>
+                                <td>{{ date('d-m-Y', strtotime($data->Date)) }}</td>
 
-                                <td>{{ formatIndianCurrency(round($sale->TotalSum, 0)) }}</td>
+                                <td>{{ formatIndianCurrency(round($data->TotalSum, 0)) }}</td>
                                 @php
-                                    $grandSum += $sale->TotalSum;
+                                    $grandSum += $data->TotalSum;
                                 @endphp
                             </tr>
                         @endforeach
@@ -56,7 +72,7 @@
         </div>
         <!-- Display the line chart -->
 
-        <x-graphs.lineChart :data="$data" />
+        <x-graphs.lineChart :data="$graph_data" />
     </div>
     <script src="{{ asset('js/jquery.js') }}"></script>
     <script>
